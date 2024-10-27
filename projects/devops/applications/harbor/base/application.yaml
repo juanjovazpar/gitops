@@ -16,6 +16,7 @@ spec:
         expose:
           type: ingress
           tls:
+            enabled: true
             secret:
               secretName: oakdew-cert
           ingress:
@@ -26,7 +27,7 @@ spec:
               external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
               external-dns.alpha.kubernetes.io/hostname: harbor.oakdew.biz
               external-dns.alpha.kubernetes.io/target: 37ed5835-217b-467a-860c-630b6ff8f222.cfargotunnel.com
-        externalURL: harbor.oakdew.biz
+        externalURL: https://harbor.oakdew.biz
         persistence:
           persistentVolumeClaim:
             registry:
