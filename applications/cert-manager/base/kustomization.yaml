@@ -1,5 +1,4 @@
-namespace: devops
-
 resources:
   - ./application.yaml
   - ./issuer.yaml
+  - ./certificate.yaml

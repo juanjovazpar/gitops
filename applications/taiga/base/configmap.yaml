@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: taiga-config
-  namespace: taiga
+  namespace: devops
 data:
   TAIGA_ADMIN_USERNAME: admin
   TAIGA_DB_NAME: taiga

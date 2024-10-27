@@ -2,17 +2,17 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: taiga
-  namespace: taiga
+  namespace: devops
   annotations:
     external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
     external-dns.alpha.kubernetes.io/hostname: taiga.oakdew.biz
-    external-dns.alpha.kubernetes.io/target: 5860ec34-d45a-45b8-b1e4-9fefd97a59a4.cfargotunnel.com
+    external-dns.alpha.kubernetes.io/target: 5b48a9ee-7653-461a-bb27-d477fcd388cb.cfargotunnel.com
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
         - taiga.oakdew.biz
-      secretName: taiga-oakdew-cert
+      secretName: oakdew-cert
   rules:
     - host: taiga.oakdew.biz
       http:
@@ -31,17 +31,3 @@ spec:
                 name: taiga-gateway
                 port:
                   number: 443
-
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: taiga-oakdew-cert
-  namespace: taiga
-spec:
-  secretName: taiga-oakdew-cert
-  issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer
-  dnsNames:
-    - taiga.oakdew.biz

@@ -4,24 +4,28 @@ metadata:
   name: gitea
   namespace: argocd
 spec:
+  project: default
   destination:
     name: 'in-cluster'
-    namespace: gitea
+    namespace: devops
   source:
     repoURL: https://dl.gitea.com/charts/
     targetRevision: 'v9.6.1'
     chart: gitea
     helm:
-      parameters:
-        - name: ingress.enabled
-          value: 'true'
-        - name: ingress.hosts[0].host
-          value: git.oakdew.local
-        - name: ingress.hosts[0].paths[0].path
-          value: '/'
-        - name: ingress.hosts[0].paths[0].pathType
-          value: 'Prefix'
-  project: default
+      values: |
+        ingress:
+          enabled: true
+          className: 'nginx'
+          annotations:
+            external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+            external-dns.alpha.kubernetes.io/hostname: gitea.oakdew.biz
+            external-dns.alpha.kubernetes.io/target: 5b48a9ee-7653-461a-bb27-d477fcd388cb.cfargotunnel.com
+          hosts:
+              - host: gitea.oakdew.biz
+                paths:
+                  - path: /
+                    pathType: Prefix
   syncPolicy:
     automated:
       prune: true

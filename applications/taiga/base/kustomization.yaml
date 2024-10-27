@@ -1,4 +1,4 @@
-namespace: taiga
+namespace: devops
 
 resources:
   - ./configmap.yaml

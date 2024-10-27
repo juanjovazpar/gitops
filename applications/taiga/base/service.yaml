@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-back
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-back
@@ -16,7 +16,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-db
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-db
@@ -29,7 +29,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-front
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-front
@@ -43,7 +43,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-async
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-async
@@ -57,7 +57,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-async-rabbitmq
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-async-rabbitmq
@@ -76,7 +76,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-events-rabbitmq
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-events-rabbitmq
@@ -95,7 +95,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-gateway
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-gateway
@@ -114,7 +114,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-protected
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-protected
@@ -128,7 +128,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: taiga-events
-  namespace: taiga
+  namespace: devops
 spec:
   selector:
     app: taiga-events

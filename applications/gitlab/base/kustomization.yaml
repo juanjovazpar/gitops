@@ -1,8 +1,0 @@
-namespace: devops
-
-resources:
-  - ./deployment.yaml
-  - ./pvc.yaml
-  - ./secret.yaml
-  - ./service.yaml
-  - ./ingress.yaml

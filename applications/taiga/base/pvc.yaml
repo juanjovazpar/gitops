@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: taiga-static-data-pvc
-  namespace: taiga
+  namespace: devops
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,7 +16,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: taiga-db-pvc
-  namespace: taiga
+  namespace: devops
 spec:
   accessModes:
     - ReadWriteOnce
@@ -30,7 +30,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: taiga-media-data-pvc
-  namespace: taiga
+  namespace: devops
 spec:
   accessModes:
     - ReadWriteOnce
@@ -44,7 +44,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: taiga-async-rabbitmq-data-pvc
-  namespace: taiga
+  namespace: devops
 spec:
   accessModes:
     - ReadWriteOnce
@@ -58,7 +58,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: taiga-events-rabbitmq-data-pvc
-  namespace: taiga
+  namespace: devops
 spec:
   accessModes:
     - ReadWriteOnce

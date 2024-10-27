@@ -12,20 +12,28 @@ spec:
     targetRevision: 'v1.15.1'
     chart: harbor
     helm:
-      parameters:
-        - name: expose.type
-          value: 'ingress'
-        - name: expose.ingress.hosts.core
-          value: 'harbor.oakdew.local'
-        - name: expose.ingress.className
-          value: 'nginx'
-        - name: externalURL
-          value: 'harbor.oakdew.local'
-        - name: persistence.persistentVolumeClaim.registry.storageClass
-          value: 'nfs-client'
-        - name: persistence.persistentVolumeClaim.jobservice.jobLog.storageClass
-          value: 'nfs-client'
-          # TODO: Define a secret for the password HARBOR_ADMIN_PASSWORD
+      values: |
+        expose:
+          type: ingress
+          tls:
+            secret:
+              secretName: harbor-tls
+          ingress:
+            hosts:
+              core: harbor.oakdew.biz
+            className: 'nginx'
+            annotations:
+              external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+              external-dns.alpha.kubernetes.io/hostname: harbor.oakdew.biz
+              external-dns.alpha.kubernetes.io/target: 5b48a9ee-7653-461a-bb27-d477fcd388cb.cfargotunnel.com
+        externalURL: harbor.oakdew.biz
+        persistence:
+          persistentVolumeClaim:
+            registry:
+              storageClass: nfs-client
+            jobservice:
+              jobLog:
+                storageClass: nfs-client
   project: default
   syncPolicy:
     automated:
