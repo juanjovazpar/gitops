@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+spec:
+  project: devops
+  destination:
+    name: 'in-cluster'
+    namespace: devops
+  source:
+    repoURL: https://charts.jetstack.io
+    targetRevision: 'v1.16.0'
+    chart: cert-manager
+    helm:
+      values: |
+        installCRDs: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

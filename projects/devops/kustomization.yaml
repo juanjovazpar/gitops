@@ -1,6 +1,12 @@
 namespace: devops
 
 resources:
-  - ../../applications/gitlab/base
-  - ../../applications/sealed-secrets/base
-  - ../../applications/taiga/base
+  - ./namespace.yaml
+  - ./applications/external-dns/base
+  - ./applications/cloudflared/base
+  - ./applications/cert-manager/base
+  - ./applications/nginx/base
+  - ./applications/gitea/base
+  - ./applications/harbor/base
+  - ./applications/taiga/base
+  - ./applications/argocd/base

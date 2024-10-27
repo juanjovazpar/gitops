@@ -1,216 +1,120 @@
 # BAREMETAL K8S OAKDEW
 
-### Run in local
+## GitOps and ArgoCD
 
-- Actualiza el archivo /etc/hosts
-  Con este enfoque, solo necesitas una línea en tu archivo /etc/hosts:
+We will use ArgoCD to manage the deployment of the applications in the cluster with a GitOps approach.
 
-`192.168.1.230 oakdew.local`
-
-### Set storage class default:
-kubectl patch storageclass <STORAGE_CLASS> -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-
-### Install MetalLb
-
-Configure `kube-proxy`:
+The first step will be to install ArgoCD in the cluster with a Helm chart. An isolated namespace will be created for ArgoCD to avoid conflicts with other applications. This app will be in charge of deploying and synching the applications in the cluster later.
 
 ```
-kubectl get configmap kube-proxy -n kube-system -o yaml | \
-sed -e "s/strictARP: false/strictARP: true/" | \
-kubectl diff -f - -n kube-system
-
-kubectl get configmap kube-proxy -n kube-system -o yaml | \
-sed -e "s/strictARP: false/strictARP: true/" | \
-kubectl apply -f - -n kube-system
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
+helm install argocd argo/argo-cd --namespace argocd --create-namespace
 ```
 
-### Install NGINX Ingress Controller
+## Persistent Storage
+
+To create a persistent volume, we created a storageClass named `nfs-storage`. This StorageClass is used by all Persistent Volume Claims (PVCs) in the cluster, ensuring that any storage requests default to NFS storage.
+
+All Persistent Volumes (PVs) are provisioned using the nfs-storage StorageClass. This allows for easy management of storage resources across the cluster.
+
+#### NFS Node Configuration
+
+The node designated for NFS storage is named `k8s-iris`. It serves as the centralized storage location for all data in the cluster. This setup provides a reliable and scalable storage solution, allowing multiple pods to access shared storage efficiently.
 
 ```
-helm upgrade --install ingress-nginx ingress-nginx \
- --repo https://kubernetes.github.io/ingress-nginx \
- --namespace ingress-nginx --create-namespace
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'true'
+provisioner: cluster.local/nfs
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
 ```
 
-You can watch the status by running 'kubectl get service --namespace ingress-nginx ingress-nginx-controller --output wide --watch'
+**A CEPH storage setup will be installed on the cluster, which will provide a shared storage pool for the pods instead of the NFS server.**
 
-An example Ingress that makes use of the controller:
+## DevOps Project
 
-```
-  apiVersion: networking.k8s.io/v1
-  kind: Ingress
-  metadata:
-    name: example
-    namespace: foo
-  spec:
-    ingressClassName: nginx
-    rules:
-      - host: www.example.com
-        http:
-          paths:
-            - pathType: Prefix
-              backend:
-                service:
-                  name: exampleService
-                  port:
-                    number: 80
-              path: /
-    # This section is only required if TLS is to be enabled for the Ingress
-    tls:
-      - hosts:
-        - www.example.com
-        secretName: example-tls
-```
+This project sets the main infrastructure for the development of the applications in the cluster. ArgoCD will be in charge to manage and to sync these applications into a isolated namespace `devops`.
 
-If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided:
+### Porject Applications
+
+#### 1. Cert-Manager
+
+Cert-Manager is a Kubernetes add-on that automates the management and issuance of TLS certificates. It helps secure communication between services and ensures that all applications have valid certificates, thereby enhancing the overall security posture of our environment.
+
+The main domain for the certificates will be `*.oakdew.biz`, which will be used to secure the devops applications in the cluster. A single certificate will be created for thr application in the project. The certificate will be issued by Let's Encrypt, which is a trusted CA that provides free SSL/TLS certificates and will be stored in a Kubernetes secret `oakdew-cert`.
+
+#### 2. External-DNS
+
+External-DNS automatically manages DNS records for Kubernetes services in external DNS providers. By integrating with DNS providers like `Cloudflare` (our case), it simplifies the management of DNS entries, allowing services to be easily accessible via user-friendly domain names.
+
+External-DNS will be able to manage the DNS records in Clouflare by synchronizing the records with the Kubernetes ingress resources.
+
+To accomplish this, External-DNS must have access to the CloudFlare API through a API token defined in the secret `cloudflare-api-key`:
 
 ```
-  apiVersion: v1
-  kind: Secret
-  metadata:
-    name: example-tls
-    namespace: foo
-  data:
-    tls.crt: <base64 encoded cert>
-    tls.key: <base64 encoded key>
-  type: kubernetes.io/tls
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-key
+  namespace: devops
+type: Opaque
+data:
+  apiKey: <CLOUDFLARE_API_KEY>
 ```
 
-## Setup Gitlab
+Configure the API token:
 
-Update file `gitlab.rb` to configure Redis:
+| Cuenta | CloudFlare Tunnel | Leer   |
+| ------ | ----------------- | ------ |
+| Zonas  | DNS               | Editar |
 
-```
-gitlab_rails['redis_host'] = 'redis'
-gitlab_rails['redis_port'] = 6379
-gitlab_rails['redis_ssl'] = false
-gitlab_rails['redis_password'] = nil
-gitlab_rails['redis_database'] = 0
-gitlab_rails['redis_enable_client'] = true
+#### 3. Cloudflared
 
-...
-external_url <URL_FOR_GITLABL_TO_REACH_ITSELF>
+Cloudflared is the official Cloudflare tunneling service that provides secure access to internal applications through Cloudflare. It enables the secure exposure of applications without opening additional ports, ensuring that they remain protected while being accessible from the internet.
 
-```
+A Cloudflare tunnel will be manually created with the following configurations, which will be used to expose the applications in the cluster.
 
-We can define variable `EXTERNAL_URL` when installing Gitlab to define this variable in the file.
+Tunnel Name: **oakdewbiz-tunnel**
 
-Then restart the Gitlab:
+Public hostname:
 
-```
-gitlab-ctl reconfigure
-gitlab-ctl restart
-```
+| Subdomain | Domain     | Type  | URL                                                       |
+| --------- | ---------- | ----- | --------------------------------------------------------- |
+| \*        | oakdew.biz | HTTPS | **ingress-nginx-controller.devops.svc.cluster.local:443** |
 
-### 500 error when accessing CI/CD in a project
+This public hostname must be set with `No TLS Verify: True` in the Cloudflare Tunnel settings.
 
-In Gitlab Pod Terminal run in `gitlab-rails console`:
+It is important to note that the tunnel will be redirected to the ingress-nginx-controller service in the devops namespace, which will be the entry point for the applications in the cluster.
 
-```
-projects = Project.all
+When created, you must copy the tunnel ID and secret token, which will be used to configure the rest of the apps.
 
-project = Project.find(<PROJECT_ID>)
+#### 4. NGINX Ingress Controller
 
-if project
-  project.update(runners_token_encrypted: nil)
-else
-  puts "Project not found."
-end
-```
+Nginx is a high-performance web server that also acts as a reverse proxy and load balancer. In this project, it will be configured to serve as the entry point for our applications, handling HTTPS traffic and managing requests to various services within the cluster.
 
-Same erro for CI/CD in admin:
+This ingress class will be configured as default in the cluster, which means that all services will be accessible through the ingress controller.
 
 ```
-gitlab-rails dbconsole
-
--- Clear project tokens, Clear group tokens, Clear instance tokens, Clear runner tokens
-UPDATE projects SET runners_token = null, runners_token_encrypted = null;
-UPDATE namespaces SET runners_token = null, runners_token_encrypted = null;
-UPDATE application_settings SET runners_registration_token_encrypted = null;
-UPDATE ci_runners SET token = null, token_encrypted = null;
-
-https://docs.gitlab.com/ee/raketasks/backup_restore.html#reset-runner-registration-tokens
+ingressClassResource: default: true
 ```
 
-Edit:
+#### 5. Harbor `harbor.oakdew.biz`
 
-After clearing existing pipeline jobs (see above), I could still not open the ci settings page for some migrated projects where I had set environment variables. In this case try to remove them:
+Harbor is a cloud-native registry that stores, signs, and scans container images for vulnerabilities. It provides a secure way to manage Docker images, ensuring that only trusted images are deployed within our applications.
 
-```
-gitlab-rails dbconsole
-SELECT * FROM ci_variables;
-DELETE FROM ci_variables WHERE project_id='XX';
-```
+This registry will be used to store the container images for the applications in the cluster, images that will be consumed by ArgoCD to deploy the applications.
 
-### Install Gitlab runners in kubernetes
+#### 6. Gitea `gitea.oakdew.biz`
 
-```
-helm repo add gitlab https://charts.gitlab.io
-helm repo update gitlab
-helm search repo -l gitlab/gitlab-runner | head -n10 # Search version to install
-helm pull gitlab/gitlab-runner --version <VERSION>
+Gitea is a lightweight self-hosted Git service that offers repository management, code review, and issue tracking. It provides a simplified interface for developers to collaborate on code while maintaining control over the source code management process.
 
-tar xf gitlab-runner-<VERSION>.tgz
-cd gitlab-runner
-```
+This Git service will be used to store the source code for the applications in the cluster. This app will be also in charge of building the container images for the applications ans store them in the Harbor registry.
 
-Create a new Project Runner in Gitlab to obtain the runner token. With the runner token, install the runner in the cluster:
+#### 7. Taiga `taiga.oakdew.biz`
 
-```
-helm install --namespace devops gitlab-runner -f helm_values.yaml gitlab/gitlab-runner
-```
-
-Set external URL for Gitlab in file `/etc/gitlab/gitlab.rb `:
-
-```
-##! Note: During installation/upgrades, the value of the environment variable
-##! EXTERNAL_URL will be used to populate/replace this value.
-##! On AWS EC2 instances, we also attempt to fetch the public hostname/IP
-##! address from AWS. For more details, see:
-##! https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
-
-external_url "http://gitlab.example.com"
-```
-
-Set outbound conection in networks to allow webhook to local network. Get a access token in Gitlab from your user prefferences and use it to make this call:
-
-```
-curl --request PUT --header "PRIVATE-TOKEN: <TOKEN>" \
---header "Content-Type: application/json" \
---data '{
-  "allow_local_requests_from_web_hooks_and_services": true
-  }' \
-"http://gitlab.oakdew.local/api/v4/application/settings"
-```
-
-Verify configurations:
-
-```
-curl --header "PRIVATE-TOKEN: <TOKEN>" \
-"http://gitlab.oakdew.local/api/v4/application/settings"
-```
-
-When you have error 500 in setting, it can be related with error `OpenSSL::Cipher::CipherError`. Try to run this in Pod terminal:
-
-```
-gitlab-rails console
-
-ApplicationSetting.first.delete
-ApplicationSetting.first
-exit
-```
-
-### Harbor from local machine
-To `docker login` to harbor from local machine, you need to add the trusted insecure:
-
-```
-sudo nano /etc/docker/daemon.json
-```
-
-Add the following content:
-
-```
-{
-  "insecure-registries" : ["harbor.oakdew.local]
-}
-```
+Taiga is an agile project management tool that supports both Scrum and Kanban methodologies. It enables teams to manage their projects effectively, track progress, and collaborate efficiently, improving overall project delivery.

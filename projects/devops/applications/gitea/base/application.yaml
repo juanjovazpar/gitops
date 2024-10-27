@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea
+  namespace: argocd
+spec:
+  project: devops
+  destination:
+    name: 'in-cluster'
+    namespace: devops
+  source:
+    repoURL: https://dl.gitea.com/charts/
+    targetRevision: 'v9.6.1'
+    chart: gitea
+    helm:
+      values: |
+        ingress:
+          enabled: true
+          className: 'nginx'
+          tls:
+            - secretName: oakdew-cert
+          annotations:
+            external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+            external-dns.alpha.kubernetes.io/hostname: gitea.oakdew.biz
+            external-dns.alpha.kubernetes.io/target: 37ed5835-217b-467a-860c-630b6ff8f222.cfargotunnel.com
+          hosts:
+              - host: gitea.oakdew.biz
+                paths:
+                  - path: /
+                    pathType: Prefix
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: hashicorp
+  namespace: argocd
+spec:
+  destination:
+    name: 'in-cluster'
+    namespace: hashicorp
+  source:
+    repoURL: https://helm.releases.hashicorp.com
+    targetRevision: 'v0.28.1'
+    chart: vault
+    helm:
+      parameters:
+        - name: expose.type
+          value: 'ingress'
+  project: devops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
