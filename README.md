@@ -87,7 +87,7 @@ Public hostname:
 | --------- | ---------- | ----- | --------------------------------------------------------- |
 | \*        | oakdew.biz | HTTPS | **ingress-nginx-controller.devops.svc.cluster.local:443** |
 
-This public hostname must be set with `No TLS Verify: True` in the Cloudflare Tunnel settings.
+This public hostname must be set with `No TLS Verify: True` in the Cloudflare Tunnel settings when certificates in cluster are not used.
 
 It is important to note that the tunnel will be redirected to the ingress-nginx-controller service in the devops namespace, which will be the entry point for the applications in the cluster.
 
