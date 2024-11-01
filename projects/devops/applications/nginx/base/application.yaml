@@ -22,6 +22,14 @@ spec:
           admissionWebhooks:
             certManager:
               enabled: true
+          extraArgs:
+            default-ssl-certificate: "devops/oakdew-cert"
+          defaultTLS:
+            enabled: true
+            secretName: oakdew-cert
+          wildcardTLS:
+            enabled: true
+            secretName: oakdew-cert
   syncPolicy:
     automated:
       prune: true
