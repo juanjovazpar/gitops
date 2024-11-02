@@ -9,4 +9,3 @@ resources:
   - ./applications/gitea/base
   - ./applications/harbor/base
   - ./applications/taiga/base
-  - ./applications/argocd/base

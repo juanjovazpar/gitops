@@ -10,7 +10,6 @@ resources:
   - ./deployment-events.yaml
   - ./deployment-front.yaml
   - ./deployment-protected.yaml
-  - ./deployment-gateway.yaml
   - ./pvc.yaml
   - ./secret.yaml
   - ./service.yaml

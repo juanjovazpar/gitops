@@ -1,0 +1,31 @@
+global:
+  domain: argocd.oakdew.biz
+configs:
+  tls:
+    annotations:
+      external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+      external-dns.alpha.kubernetes.io/hostname: argocd.oakdew.biz
+      external-dns.alpha.kubernetes.io/target: 37ed5835-217b-467a-860c-630b6ff8f222.cfargotunnel.com
+      nginx.ingress.kubernetes.io/ssl-passthrough: 'true'
+server:
+  ingress:
+    enabled: true
+    hostname: argocd.oakdew.biz
+    ingressClassName: nginx
+    tls:
+      annotations:
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+        external-dns.alpha.kubernetes.io/hostname: argocd.oakdew.biz
+        external-dns.alpha.kubernetes.io/target: 37ed5835-217b-467a-860c-630b6ff8f222.cfargotunnel.com
+        nginx.ingress.kubernetes.io/ssl-passthrough: 'true'
+  certificate:
+    enabled: true
+    domain: argocd.oakdew.biz
+    issuer:
+      name: letsencrypt-prod
+      kind: ClusterIssuer
+    privateKey:
+      rotationPolicy: Never
+      encoding: PKCS1
+      algorithm: RSA
+      size: 2048

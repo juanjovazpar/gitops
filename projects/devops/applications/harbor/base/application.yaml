@@ -17,7 +17,6 @@ spec:
           type: ingress
           tls:
             enabled: true
-            certSource: 'secret'
             secret:
               secretName: oakdew-cert
           ingress:

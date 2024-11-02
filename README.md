@@ -6,10 +6,18 @@ We will use ArgoCD to manage the deployment of the applications in the cluster w
 
 The first step will be to install ArgoCD in the cluster with a Helm chart. An isolated namespace will be created for ArgoCD to avoid conflicts with other applications. This app will be in charge of deploying and synching the applications in the cluster later.
 
+`values.yaml` file is used to configure the ArgoCD installation.This file is located in the `argocd` folder.
+
 ```
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update
-helm install argocd argo/argo-cd --namespace argocd --create-namespace
+helm install argocd argo/argo-cd --namespace argocd --create-namespace -f values.yaml
+```
+
+We need to annotate the ingress to pass the SSL traffic to the ArgoCD server.
+
+```
+kubectl annotate ingress argocd-server -n argocd nginx.ingress.kubernetes.io/ssl-passthrough="true" --overwrite
 ```
 
 ## Persistent Storage
@@ -109,6 +117,12 @@ ingressClassResource: default: true
 #### 5. Harbor `harbor.oakdew.biz`
 
 Harbor is a cloud-native registry that stores, signs, and scans container images for vulnerabilities. It provides a secure way to manage Docker images, ensuring that only trusted images are deployed within our applications.
+
+It is important to check that the Harbor registry is accessible as a Docker registry, which can be done by running the following command from our local machines:
+
+```
+docker login harbor.oakdew.biz
+```
 
 This registry will be used to store the container images for the applications in the cluster, images that will be consumed by ArgoCD to deploy the applications.
 

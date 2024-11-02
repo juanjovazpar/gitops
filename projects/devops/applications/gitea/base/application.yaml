@@ -18,7 +18,6 @@ spec:
           enabled: true
           className: 'nginx'
           tls:
-            enabled: true
             - secretName: oakdew-cert
           annotations:
             external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
