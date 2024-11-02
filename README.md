@@ -148,3 +148,17 @@ Gitea Runner is a Gitea add-on that allows you to our CI pipeline.
 #### 7. Taiga `taiga.oakdew.biz`
 
 Taiga is an agile project management tool that supports both Scrum and Kanban methodologies. It enables teams to manage their projects effectively, track progress, and collaborate efficiently, improving overall project delivery.
+
+#### Taiga and Gitea synchronization
+
+Taiga-Github integration can be used to synchronize the issues and tasks from Gitea to Taiga too. For every project in Taiga we can create a Github webhook integration to sync repositories from Gitea to Taiga.
+
+With this integration we can:
+
+- Attach commits in an epic, user story, issue, or task. Use the ticket refferences (`TG-REF`) in the commits messages like: `feat(TG-123): Add new feature`.
+
+- Change the status of an epic, user story, issue, or task. Use the ticket refferences (`TG-REF`) and the status slug (`#STATUS-slug`) in the commits messages like: `feat(TG-123): Add new feature #done`.
+
+- Create issues on Taiga when they are created on Gitea.
+
+**For refference: https://docs.taiga.io/integrations-github.html**
