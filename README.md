@@ -132,6 +132,19 @@ Gitea is a lightweight self-hosted Git service that offers repository management
 
 This Git service will be used to store the source code for the applications in the cluster. This app will be also in charge of building the container images for the applications ans store them in the Harbor registry.
 
+After installing Gitea, you will need to change the default credentials:
+
+```
+https://gitea.com/gitea/helm-chart/src/branch/main/values.yaml
+
+  username: gitea_admin
+  password: r8sA8CPHD9!bt6d
+```
+
+##### Gitea Runner
+
+Gitea Runner is a Gitea add-on that allows you to our CI pipeline.
+
 #### 7. Taiga `taiga.oakdew.biz`
 
 Taiga is an agile project management tool that supports both Scrum and Kanban methodologies. It enables teams to manage their projects effectively, track progress, and collaborate efficiently, improving overall project delivery.
